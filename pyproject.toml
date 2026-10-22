@@ -7,7 +7,14 @@ authors = [
     { name = "sprigg4n-1", email = "sprigg4n.me@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "beanie>=2.2.0",
+    "cloudinary>=1.46.3",
+    "fastapi>=0.159.1",
+    "pydantic-settings>=2.16.1",
+    "python-multipart>=0.0.32",
+    "uvicorn[standard]>=0.54.0",
+]
 
 [project.scripts]
 trailyx-back = "trailyx_back:main"
