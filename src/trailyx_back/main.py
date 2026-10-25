@@ -7,13 +7,12 @@ from trailyx_back.models.place import Place
 from trailyx_back.models.post import Post
 from fastapi import UploadFile, Form
 from beanie import PydanticObjectId
+from trailyx_back.utils import extract_gps, reverse_geocode
 import os
 os.environ["CLOUDINARY_URL"] = settings.cloudinary_url
 
 import cloudinary
 import cloudinary.uploader
-
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
