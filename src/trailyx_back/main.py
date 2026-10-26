@@ -8,6 +8,7 @@ from trailyx_back.models.post import Post
 from fastapi import UploadFile, Form
 from beanie import PydanticObjectId
 from trailyx_back.utils import extract_gps, reverse_geocode
+from fastapi import HTTPException
 import os
 os.environ["CLOUDINARY_URL"] = settings.cloudinary_url
 
@@ -42,15 +43,33 @@ async def get_posts() -> list[Post]:
 	return posts
 
 @app.post('/post')
-async def create_post(file: UploadFile, place_id: PydanticObjectId = Form(...)) -> Post:
+async def create_post(file: UploadFile) -> Post:
 	contents = await file.read()
+
+	gps = extract_gps(contents)
+	if gps is None:
+		raise HTTPException(400, "No location data found in photo")
+
+	lat, lng = gps
+	geo = await reverse_geocode(lat, lng)
+	if geo is None:
+		raise HTTPException(400, "Could not determine location")
+
+	place = await Place.find_one(
+		Place.country == geo["country"],
+		Place.city == geo["city"],
+		Place.place_name == geo["place_name"],
+	)
+	if place is None:
+		place = Place(country=geo["country"], city=geo["city"], place_name=geo["place_name"], lat=lat, lng=lng)
+		await place.insert()
+
 	result = cloudinary.uploader.upload(contents)
 
 	post = Post(
 		user_id="test",
-		place_id=place_id,
-		image_src=result["secure_url"]
+		place_id=place.id,
+		image_src=result["secure_url"],
 	)
-
 	await post.insert()
 	return post
